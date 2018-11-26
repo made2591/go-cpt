@@ -687,7 +687,7 @@ func main() {
 
 	for _, seq := range testingSequences {
 		fmt.Println(sequence.String(seq))
-		fmt.Println(compactPredictionTree.PredictionOverTestingSequence(cpt, seq, 0))
+		fmt.Println(compactPredictionTree.PredictionOverTestingSequence(cpt, seq, 5, 0))
 	}
 
 	//for _, s := range train {

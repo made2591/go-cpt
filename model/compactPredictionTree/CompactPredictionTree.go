@@ -52,10 +52,12 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 
 }
 
-func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, targetSequence *sequence.Sequence, n int) []string {
+func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, targetSequence *sequence.Sequence, k int, n int) []string {
 
+	if k < len(targetSequence.Values) {
+		targetSequence = &sequence.Sequence{Values: targetSequence.Values[len(targetSequence.Values)-k:]}
+	}
 	uniqueValues := sequence.UniqueElements(targetSequence)
-	fmt.Println(uniqueValues)
 	similarSequences := make([]*sequence.Sequence, 0)
 	for _, uniqueValue := range uniqueValues {
 		for _, seq := range compactPredictionTree.invertedIndexTable.Table[uniqueValue] {
@@ -76,7 +78,10 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 
 	consequents := make(map[int]*sequence.Sequence, 0)
 	for _, similarSequence := range similarSequences {
-		consequents[similarSequence.ID] = sequence.ComputeConsequent(targetSequence, similarSequence)
+		consequent := sequence.ComputeConsequent(targetSequence, similarSequence)
+		if len(consequent.Values) > 0 {
+			consequents[similarSequence.ID] = sequence.ComputeConsequent(targetSequence, similarSequence)
+		}
 	}
 
 	countables := make(map[string]float64, 0)

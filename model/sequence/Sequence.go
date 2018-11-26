@@ -60,15 +60,27 @@ func stringInSlice(a string, list []string) bool {
 
 func ComputeConsequent(seq1 *Sequence, seq2 *Sequence) *Sequence {
 	result := &Sequence{Values: make([]string, 0)}
+	goAhead := false
 	for i := len(seq2.Values)-1; i >= 0; i-- {
 		if strings.Compare(seq2.Values[i], seq1.Values[len(seq1.Values)-1]) == 0 {
-			return result
-		} else {
-			if !stringInSlice(seq2.Values[i], result.Values) {
-				result.Values = append(result.Values, seq2.Values[i])
+			goAhead = true
+			break
+		}
+	}
+	if goAhead {
+		for i := len(seq2.Values) - 1; i >= 0; i-- {
+			if strings.Compare(seq2.Values[i], seq1.Values[len(seq1.Values)-1]) == 0 {
+				return result
+			} else {
+				if !stringInSlice(seq2.Values[i], result.Values) {
+					result.Values = append(result.Values, seq2.Values[i])
+				}
 			}
 		}
 	}
+	fmt.Println("seq1:", String(seq1))
+	fmt.Println("seq2:", String(seq2))
+	fmt.Println("result:", String(result))
 	return result
 }
 
