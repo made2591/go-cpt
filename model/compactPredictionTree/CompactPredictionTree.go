@@ -35,12 +35,15 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 	invertedIndex := compactPredictionTree.invertedIndexTable
 	lookup := compactPredictionTree.lookupTable
 	for _, seq := range sequences {
-		for _, elem := range seq.Values {
+		for index, elem := range seq.Values {
 			if found, _ := predictionTree.GetChildWithValue(cursorNode, elem); found == false {
 				cursorNode = predictionTree.AddChild(cursorNode, elem)
 				fmt.Println(predictionTree.String(compactPredictionTree.predictionTree))
+			} else {
+				if index == 0 {
+					cursorNode = cursorNode.Children
+				}
 			}
-			cursorNode = cursorNode.Children
 			invertedIndex.Table[elem] = append(invertedIndex.Table[elem], seq)
 		}
 		lookup.Table[seq.ID] = cursorNode

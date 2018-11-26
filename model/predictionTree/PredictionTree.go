@@ -15,49 +15,58 @@ const (
 type PredictionTree struct{
 	Item string
 	Parent *PredictionTree
-	Children *PredictionTree
+	Children[] *PredictionTree
 }
 
 func NewPredictionTree(value string) (predictionTree *PredictionTree) {
 	predictionTree = &PredictionTree{}
 	predictionTree.Item = value
+	predictionTree.Children = make([]*Children, 0)
 	return predictionTree
 }
 
 func AddChild(node *PredictionTree, value string) *PredictionTree {
-	pointer := node
-	for pointer.Children != nil {
-		pointer = pointer.Children
+	if node == nil {
+		return nil
 	}
-	pointer.Children = &PredictionTree{Item: value}
-	return pointer.Children
+	newChild = &PredictionTree{Item: value}
+	pointer.Children = append(pointer.Children, newChild)
+	return newChild
 }
 
-func GetChildWithValue(node *PredictionTree, value string) (found bool, predictionTree *PredictionTree){
-	pointer := node
-	for pointer.Children != nil {
-		if strings.EqualFold(pointer.Children.Item, value) {
-			return true, pointer.Children
+func IsLeaf(node *PredictionTree) bool {
+	return len(node.Children) == 0
+}
+
+func GetChildWithValue(node *PredictionTree, value string) (found bool, predictionTree *PredictionTree) {
+	if node == nil || node.Children == nil || len(node.Children) == 0 {
+		return false, nil
+	}
+	for _, c := range node.Children {
+		if strings.EqualFold(c.Item, value) {
+			return true, c
 		}
-		pointer = pointer.Children
 	}
 	return false, nil
 }
 	
-func GetAllChildren(node *PredictionTree) *PredictionTree {
+func GetAllChildren(node *PredictionTree) []*PredictionTree {
 	return node.Children
 }
 
 func RemoveChildWithValue(node *PredictionTree, value string) bool {
-	pointer := node
-	for pointer.Children != nil {
-		if strings.EqualFold(pointer.Children.Item, value) {
-			pointer.Children = pointer.Children.Children
-			return true
+	found := false
+	newNodes := make([]*PredictionTree, 0)
+	for i, c := range node.Children {
+		if !strings.EqualFold(c.Item, value) {
+			newNodes = append(node.Children[:i], node.Children[i+1:])
+			found = true
 		}
-		pointer = pointer.Children
 	}
-	return false
+	if found {
+		node.Children = newNodes
+	}
+	return found
 }
 
 func String(node *PredictionTree) string {
@@ -85,10 +94,10 @@ func printText(text string, spaces []bool, last bool) string {
 func printItems(t *PredictionTree, spaces []bool) string {
 	var result string
 	pointer := t
-	for pointer.Children != nil {
-		last := pointer.Children.Children == nil
-		result += printText(pointer.Item, spaces, last)
-		if pointer.Children.Children != nil {
+	for i := 0; i < len(t.Children); i++ {
+		last := i == len(t.Children)-1
+		result += printText(t.Children[i], spaces, last)
+		if i == 0 {
 			spacesChild := append(spaces, last)
 			result += printItems(pointer.Children.Children, spacesChild)
 		}
