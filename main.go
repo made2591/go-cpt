@@ -671,20 +671,20 @@ func PrintCPT(cpt *CPT) {
 
 func main() {
 	trainingSequences := sequence.ReadCSVSequencesFile("./data/dummy.csv")
-	testingSequences := sequence.ReadCSVSequencesFile("./data/test.csv")
-	for _, seq := range trainingSequences {
-		fmt.Println(sequence.String(seq))
-	}
-	for _, seq := range testingSequences {
-		fmt.Println(sequence.String(seq))
-	}
+	//testingSequences := sequence.ReadCSVSequencesFile("./data/test.csv")
+	//for _, seq := range trainingSequences {
+	//	fmt.Println(sequence.String(seq))
+	//}
+	//for _, seq := range testingSequences {
+	//	fmt.Println(sequence.String(seq))
+	//}
 	invertedIndex := invertedIndexTable.NewInvertedIndexTable(trainingSequences)
 	lookup := lookupTable.NewLookupTable(trainingSequences)
 	predTree := predictionTree.NewPredictionTree("ROOT")
  	cpt := compactPredictionTree.NewCompactPredictionTree(invertedIndex, lookup, predTree)
 	compactPredictionTree.InitCompactPredictionTree(cpt, trainingSequences)
 
-	fmt.Println(compactPredictionTree.String(*cpt))
+	// fmt.Println(compactPredictionTree.String(*cpt))
 
 	//for _, s := range train {
 	//	PrintSequence(s)

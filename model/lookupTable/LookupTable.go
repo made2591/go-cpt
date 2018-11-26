@@ -28,7 +28,7 @@ func NewLookupTable(sequences []*sequence.Sequence) (lookupTable *LookupTable) {
 
 func String(lookupTable *LookupTable) (result string) {
 	for _, key := range lookupTable.keys {
-		result = strings.Join([]string{fmt.Sprintf("%d", key), " -> ", lookupTable.Table[key].Item, "\n"}, "")
+		result = strings.Join([]string{result, "\n", fmt.Sprintf("%d", key), " -> ", lookupTable.Table[key].Item, "\n"}, "")
 	}
 	return result
 }

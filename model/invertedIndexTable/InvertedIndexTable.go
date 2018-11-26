@@ -37,7 +37,17 @@ func NewInvertedIndexTable(sequences []*sequence.Sequence) (invertedIndexTable *
 	return
 }
 
-func GetElementWithValue(invertedIndexTable InvertedIndexTable, key string) (bool, []*sequence.Sequence) {
+func AddSequenceIfMissing(invertedIndexTable *InvertedIndexTable, key string, seq *sequence.Sequence) (bool, *sequence.Sequence) {
+	for _, cseq := range invertedIndexTable.Table[key] {
+		if sequence.EqualSequence(seq, cseq) {
+			return false, nil
+		}
+	}
+	invertedIndexTable.Table[key] = append(invertedIndexTable.Table[key], seq)
+	return true, seq
+}
+
+func GetSequencesForSymbol(invertedIndexTable *InvertedIndexTable, key string) (bool, []*sequence.Sequence) {
 	if value, found := invertedIndexTable.Table[key]; found == true {
 		return found, value
 	}
@@ -45,14 +55,13 @@ func GetElementWithValue(invertedIndexTable InvertedIndexTable, key string) (boo
 }
 
 func String(invertedIndexTable *InvertedIndexTable) (result string) {
-	for _, key := range invertedIndexTable.keys {
-		result = key
-		sequences := "["
-		for _, seq := range invertedIndexTable.Table[key] {
-			sequences = strings.Join([]string{sequences, "[", sequence.String(seq), "]"}, " ")
+	result = ""
+	for key, sequences := range invertedIndexTable.Table {
+		result = strings.Join([]string{result, key, " -> "}, "")
+		for _, seq := range sequences {
+			result = strings.Join([]string{result, sequence.String(seq)}, " ")
 		}
-		sequences = strings.Join([]string{sequences, "]\n"}, "")
-		result = strings.Join([]string{result, sequences}, " -> ")
+		result = strings.Join([]string{result, "\n"}, "")
 	}
 	return result
 }

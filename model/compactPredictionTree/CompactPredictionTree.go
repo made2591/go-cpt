@@ -6,7 +6,6 @@ import (
 	"github.com/made2591/go-cpt/model/predictionTree"
 	"github.com/made2591/go-cpt/model/sequence"
 	"strings"
-	"fmt"
 )
 
 type CompactPredictionTree struct {
@@ -36,17 +35,16 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 	lookup := compactPredictionTree.lookupTable
 	for _, seq := range sequences {
 		for index, elem := range seq.Values {
-			if found, _ := predictionTree.GetChildWithValue(cursorNode, elem); found == false {
+			if found, child := predictionTree.GetChildWithValue(cursorNode, elem); found == false {
 				cursorNode = predictionTree.AddChild(cursorNode, elem)
-				fmt.Println(predictionTree.String(compactPredictionTree.predictionTree))
 			} else {
-				if index == 0 {
-					cursorNode = cursorNode.Children
-				}
+				cursorNode = child
 			}
-			invertedIndex.Table[elem] = append(invertedIndex.Table[elem], seq)
+			invertedIndexTable.AddSequenceIfMissing(invertedIndex, elem, seq)
+			if index == len(seq.Values)-1 {
+				lookup.Table[seq.ID] = cursorNode
+			}
 		}
-		lookup.Table[seq.ID] = cursorNode
 		cursorNode = compactPredictionTree.predictionTree
 	}
 

@@ -15,6 +15,19 @@ type Sequence struct{
 	Values []string
 }
 
+func EqualSequence(seq1 *Sequence, seq2 *Sequence) bool {
+	if seq1 == nil && seq2 != nil {
+		return false
+	}
+	if seq1 != nil && seq2 == nil {
+		return false
+	}
+	if seq1.ID == seq2.ID {
+		return true
+	}
+	return false
+}
+
 func NewSequence(id int, values []string) (sequence *Sequence) {
 	sequence.ID = id
 	sequence.Values = values
@@ -27,7 +40,7 @@ func FillSequence(sequence *Sequence, values []string) *Sequence {
 }
 
 func String(sequence *Sequence) string {
-	return strings.Join([]string{"ID: ", fmt.Sprintf("%d", sequence.ID), "[", fmt.Sprintf("%v", sequence.Values), "]"}, " ")
+	return strings.Join([]string{"ID: ", fmt.Sprintf("%d", sequence.ID), " Values [", fmt.Sprintf("%v", sequence.Values), "]"}, "")
 }
 
 func ReadCSVSequencesFile(filepath string) (result []*Sequence) {
