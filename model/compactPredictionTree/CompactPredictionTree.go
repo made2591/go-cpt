@@ -6,6 +6,7 @@ import (
 	"github.com/made2591/go-cpt/model/predictionTree"
 	"github.com/made2591/go-cpt/model/sequence"
 	"strings"
+	"sort"
 	"fmt"
 )
 
@@ -51,9 +52,10 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 
 }
 
-func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, targetSequence *sequence.Sequence) string {
+func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, targetSequence *sequence.Sequence, n int) []string {
 
 	uniqueValues := sequence.UniqueElements(targetSequence)
+	fmt.Println(uniqueValues)
 	similarSequences := make([]*sequence.Sequence, 0)
 	for _, uniqueValue := range uniqueValues {
 		for _, seq := range compactPredictionTree.invertedIndexTable.Table[uniqueValue] {
@@ -70,7 +72,7 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 		}
 	}
 
-	fmt.Println(similarSequences)
+	// fmt.Print(similarSequences)
 
 	consequents := make(map[int]*sequence.Sequence, 0)
 	for _, similarSequence := range similarSequences {
@@ -82,24 +84,48 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 		for _, elem := range consequent.Values {
 			score := 0.0
 			if score, ok := countables[elem]; !ok {
-				score = float64(1 + (1/len(similarSequences)) +(1/len(countables)+1)) * 0.001
+				score = float64(1 + (1/len(similarSequences)) +(1/(len(countables)+1))) * 0.001
 			} else {
-				score = score * float64(1 + (1/len(similarSequences)) +(1/len(countables)+1)) * 0.001
+				score = score * float64(1 + (1/len(similarSequences)) +(1/(len(countables)+1))) * 0.001
 			}
 			countables[elem] = score
 		}
 	}
 
-	max := -1.0
-	result := ""
-	for elem, value := range countables {
-		if value > max {
-			result = elem
-		}
+	fmt.Println("countables: ", countables)
+	pairs := rankByScore(countables)
+	result := make([]string, 0)
+	for _, pair := range pairs {
+		result = append(result, pair.Key)
+	}
+	if n < len(result)-1 {
+		return result[:(n+1)]
 	}
 	return result
 
 }
+
+func rankByScore(scores map[string]float64) PairList {
+	pl := make(PairList, len(scores))
+	i := 0
+	for k, v := range scores {
+		pl[i] = Pair{k, v}
+		i++
+	}
+	sort.Sort(sort.Reverse(pl))
+	return pl
+}
+
+type Pair struct {
+	Key string
+	Value float64
+}
+
+type PairList []Pair
+
+func (p PairList) Len() int { return len(p) }
+func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
+func (p PairList) Swap(i, j int){ p[i], p[j] = p[j], p[i] }
 
 func String(compactPredictionTree CompactPredictionTree) (result string) {
 	ii := invertedIndexTable.String(compactPredictionTree.invertedIndexTable)

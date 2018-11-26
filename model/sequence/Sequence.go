@@ -40,9 +40,9 @@ func FillSequence(sequence *Sequence, values []string) *Sequence {
 }
 
 func UniqueElements(sequence *Sequence) []string {
-	result := []string{}
+	result := make([]string, 0)
 	for _, c := range sequence.Values {
-		if !stringInSlice(c, sequence.Values) {
+		if !stringInSlice(c, result) {
 			result = append(result, c)
 		}
 	}
@@ -91,10 +91,6 @@ func ReadCSVSequencesFile(filepath string) (result []*Sequence) {
 		}
 		result = append(result, &Sequence{ID: count, Values: record})
 		count += 1
-		// TODO REMOVE LIMIT
-		if count > 10 {
-			break
-		}
 	}
 	return result
 
