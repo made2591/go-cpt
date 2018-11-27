@@ -15,6 +15,16 @@ type Sequence struct{
 	Values []string
 }
 
+func AddIfNotExist(seqs []*Sequence, seq *Sequence) (bool, int) {
+	for _, s := range seqs {
+		if EqualSequence(s, seq) {
+			return false, -1
+		}
+	}
+	seqs = append(seqs, seq)
+	return true, len(seqs)
+}
+
 func EqualSequence(seq1 *Sequence, seq2 *Sequence) bool {
 	if seq1 == nil && seq2 != nil {
 		return false
@@ -42,14 +52,14 @@ func FillSequence(sequence *Sequence, values []string) *Sequence {
 func UniqueElements(sequence *Sequence) []string {
 	result := make([]string, 0)
 	for _, c := range sequence.Values {
-		if !stringInSlice(c, result) {
+		if !StringInSlice(c, result) {
 			result = append(result, c)
 		}
 	}
 	return result
 }
 
-func stringInSlice(a string, list []string) bool {
+func StringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
 			return true
@@ -72,15 +82,28 @@ func ComputeConsequent(seq1 *Sequence, seq2 *Sequence) *Sequence {
 			if strings.Compare(seq2.Values[i], seq1.Values[len(seq1.Values)-1]) == 0 {
 				return result
 			} else {
-				if !stringInSlice(seq2.Values[i], result.Values) {
+				if !StringInSlice(seq2.Values[i], result.Values) {
 					result.Values = append(result.Values, seq2.Values[i])
 				}
 			}
 		}
 	}
-	fmt.Println("seq1:", String(seq1))
-	fmt.Println("seq2:", String(seq2))
-	fmt.Println("result:", String(result))
+	// fmt.Println("seq1:", String(seq1))
+	// fmt.Println("seq2:", String(seq2))
+	// fmt.Println("result:", String(result))
+	return result
+}
+
+func LastNSymbols(sequence *Sequence, n int) []string {
+	if sequence == nil {
+		return make([]string, 0)
+	}
+	result := make([]string, 0)
+	for i, c := range sequence.Values {
+		if (i >= (len(sequence.Values) - n)) {
+			result = append(result, c)
+		}
+	}
 	return result
 }
 
@@ -95,7 +118,7 @@ func ReadCSVSequencesFile(filepath string) (result []*Sequence) {
 		log.Fatal("error: trainFile")
 	}
 	r := csv.NewReader(bufio.NewReader(f))
-	count := 0
+	count := -1
 	for {
 		record, err := r.Read()
 		if err == io.EOF {

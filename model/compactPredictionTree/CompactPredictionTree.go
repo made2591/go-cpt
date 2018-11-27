@@ -54,54 +54,63 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 
 func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, targetSequence *sequence.Sequence, k int, n int) []string {
 
+	fmt.Println("original target: ", targetSequence.Values)
 	if k < len(targetSequence.Values) {
 		targetSequence = &sequence.Sequence{Values: targetSequence.Values[len(targetSequence.Values)-k:]}
 	}
+	fmt.Println("cut target: ", targetSequence.Values)
 	uniqueValues := sequence.UniqueElements(targetSequence)
+
 	similarSequences := make([]*sequence.Sequence, 0)
 	for _, uniqueValue := range uniqueValues {
+		//fmt.Println(uniqueValue, " ")
+		// for _, seq := range compactPredictionTree.invertedIndexTable.Table[uniqueValue] {
+		// 	fmt.Print(seq.ID, " ")
+		// }
+		//fmt.Print("\n")
 		for _, seq := range compactPredictionTree.invertedIndexTable.Table[uniqueValue] {
-			found := false
-			for _, alreadySeq := range similarSequences {
-				if sequence.EqualSequence(seq, alreadySeq) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				similarSequences = append(similarSequences, seq)
+			if sequence.StringInSlice(sequence.LastNSymbols(targetSequence, 1)[0], seq.Values) {
+				sequence.AddIfNotExist(similarSequences, seq)
 			}
 		}
 	}
 
-	// fmt.Print(similarSequences)
+	fmt.Println("number of similar seqs: ", len(similarSequences))
+	for _, seq := range similarSequences {
+		fmt.Println("\t", seq.Values)
+	}
 
 	consequents := make(map[int]*sequence.Sequence, 0)
 	for _, similarSequence := range similarSequences {
 		consequent := sequence.ComputeConsequent(targetSequence, similarSequence)
 		if len(consequent.Values) > 0 {
 			consequents[similarSequence.ID] = sequence.ComputeConsequent(targetSequence, similarSequence)
+			fmt.Println("\t", similarSequence.ID, consequents[similarSequence.ID])
 		}
 	}
 
+	//fmt.Println("consequents: ")
 	countables := make(map[string]float64, 0)
 	for _, consequent := range consequents {
+		//fmt.Println(consequent)
 		for _, elem := range consequent.Values {
 			score := 0.0
 			if score, ok := countables[elem]; !ok {
-				score = float64(1 + (1/len(similarSequences)) +(1/(len(countables)+1))) * 0.001
+				score = float64(1 + float64(1/len(similarSequences)) + float64(1/(len(countables)+1))) * 0.001
 			} else {
 				score = score * float64(1 + (1/len(similarSequences)) +(1/(len(countables)+1))) * 0.001
 			}
 			countables[elem] = score
+			//fmt.Println("\t", elem, score)
 		}
 	}
 
-	fmt.Println("countables: ", countables)
+	fmt.Println("number of counttable keys: ", len(countables))
 	pairs := rankByScore(countables)
 	result := make([]string, 0)
 	for _, pair := range pairs {
 		result = append(result, pair.Key)
+		fmt.Println("\t", pair.Key, pair.Value)
 	}
 	if n < len(result)-1 {
 		return result[:(n+1)]
