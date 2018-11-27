@@ -12,10 +12,10 @@ const (
 	lastItem     = "└── "
 )
 
-type PredictionTree struct{
-	Item string
-	Parent *PredictionTree
-	Children[] *PredictionTree
+type PredictionTree struct {
+	Item     string
+	Parent   *PredictionTree
+	Children []*PredictionTree
 }
 
 func NewPredictionTree(value string) (predictionTree *PredictionTree) {
@@ -29,7 +29,7 @@ func AddChild(node *PredictionTree, value string) *PredictionTree {
 	if node == nil {
 		return nil
 	}
-	newChild := &PredictionTree{Item: value}
+	newChild := &PredictionTree{Item: value, Parent: node.Parent}
 	node.Children = append(node.Children, newChild)
 	return newChild
 }
@@ -49,7 +49,7 @@ func GetChildWithValue(node *PredictionTree, value string) (found bool, predicti
 	}
 	return false, nil
 }
-	
+
 func GetAllChildren(node *PredictionTree) []*PredictionTree {
 	return node.Children
 }

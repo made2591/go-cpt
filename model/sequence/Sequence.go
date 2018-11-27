@@ -1,21 +1,21 @@
 package sequence
 
 import (
-	"strings"
-	"fmt"
-	"os"
-	"log"
-	"encoding/csv"
 	"bufio"
+	"encoding/csv"
+	"fmt"
 	"io"
+	"log"
+	"os"
+	"strings"
 )
 
-type Sequence struct{
-	ID int
+type Sequence struct {
+	ID     int
 	Values []string
 }
 
-func AddIfNotExist(seqs []*Sequence, seq *Sequence) (bool, int) {
+func AddIfNotExists(seqs []*Sequence, seq *Sequence) (bool, int) {
 	for _, s := range seqs {
 		if EqualSequence(s, seq) {
 			return false, -1
@@ -71,7 +71,7 @@ func StringInSlice(a string, list []string) bool {
 func ComputeConsequent(seq1 *Sequence, seq2 *Sequence) *Sequence {
 	result := &Sequence{Values: make([]string, 0)}
 	goAhead := false
-	for i := len(seq2.Values)-1; i >= 0; i-- {
+	for i := len(seq2.Values) - 1; i >= 0; i-- {
 		if strings.Compare(seq2.Values[i], seq1.Values[len(seq1.Values)-1]) == 0 {
 			goAhead = true
 			break
@@ -100,7 +100,7 @@ func LastNSymbols(sequence *Sequence, n int) []string {
 	}
 	result := make([]string, 0)
 	for i, c := range sequence.Values {
-		if (i >= (len(sequence.Values) - n)) {
+		if i >= (len(sequence.Values) - n) {
 			result = append(result, c)
 		}
 	}
