@@ -25,14 +25,11 @@ func main() {
 	invertedIndex := invertedIndexTable.NewInvertedIndexTable(trainingSequences)
 	lookup := lookupTable.NewLookupTable(trainingSequences)
 	predTree := predictionTree.NewPredictionTree("ROOT")
-	cpt := compactPredictionTree.NewCompactPredictionTree(invertedIndex, lookup, predTree)
+	cpt := compactPredictionTree.NewCompactPredictionTree(invertedIndex, lookup, predTree, trainingSequences, testingSequences)
 	compactPredictionTree.InitCompactPredictionTree(cpt, trainingSequences)
 	fmt.Println(predictionTree.String(cpt.PredictionTree))
 
-	for _, seq := range testingSequences {
-		fmt.Println(sequence.String(seq))
-		fmt.Println(compactPredictionTree.PredictionOverTestingSequence(cpt, seq, 5, 1))
-	}
+	fmt.Println(compactPredictionTree.PredictionOverTestingSequence(cpt,5, 3))
 
 	//for _, s := range train {
 	//	PrintSequence(s)

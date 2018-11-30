@@ -5,11 +5,11 @@ import (
 	"sort"
 	"strings"
 
+	set "github.com/deckarep/golang-set"
 	"github.com/made2591/go-cpt/model/invertedIndexTable"
 	"github.com/made2591/go-cpt/model/lookupTable"
 	"github.com/made2591/go-cpt/model/predictionTree"
 	"github.com/made2591/go-cpt/model/sequence"
-	set "github.com/deckarep/golang-set"
 )
 
 type CompactPredictionTree struct {
@@ -50,7 +50,7 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 			}
 			invertedIndexTable.AddSequenceIfMissing(invertedIndex, elem, seq)
 			if index == len(seq.Values)-1 {
-				lookup.Table[seq.ID] = cursorNode
+				lookup.Table[seq.ID] = seq
 			}
 		}
 		cursorNode = compactPredictionTree.PredictionTree
@@ -58,14 +58,16 @@ func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree, seq
 
 }
 
-func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, k int, n int) []string {
+func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree, k int, n int) [][]string {
 
-	intersection := set.NewSet()
-	for _, targetSequence := range compactPredictionTree.TestingSet {
-
-	}
+	results := make([][]string, 0)
 
 	for _, targetSequence := range compactPredictionTree.TestingSet {
+
+		intersection := set.NewSet()
+		for _, targetSequence := range compactPredictionTree.TestingSet {
+			intersection.Add(targetSequence.ID)
+		}
 
 		fmt.Println("original target: ", targetSequence.Values)
 		if k < len(targetSequence.Values) {
@@ -74,74 +76,84 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 		fmt.Println("cut target: ", targetSequence.Values)
 
 		for _, element := range targetSequence.Values {
-			for _, seq := range compactPredictionTree.InvertedIndexTable.Table[element] {
-				intersection.Add(seq.ID)
+			if len(compactPredictionTree.InvertedIndexTable.Table[element]) != 0 {
+				fmt.Println("each target: ", element)
+				fmt.Println("before target: ", intersection.String())
+				seqID := set.NewSet()
+				for _, seq := range compactPredictionTree.InvertedIndexTable.Table[element] {
+					seqID.Add(seq.ID)
+				}
+				intersection = intersection.Intersect(seqID)
+				fmt.Println("after target: ", intersection.String())
 			}
 		}
 
 		similarSequences := make([]*sequence.Sequence, 0)
-		it := set.Iterator()
-		for element := range it {
+		it := intersection.Iterator()
+		for element := range it.C {
 			fmt.Println(element)
-			currentNode := compactPredictionTree.LookupTable.Table[element]
-			tmp := &sequence.Sequence{Values: []string{}}
-			for currentNode != nil && currentNode.Parent != nil {
-				tmp.Values = append(tmp.Values, currentNode.Item)
-				currentNode = currentNode.Parent
-			}
-			for i := len(tmp.Values)/2 - 1; i >= 0; i-- {
-				opp := len(tmp.Values) - 1 - i
-				tmp.Values[i], tmp.Values[opp] = tmp.Values[opp], tmp.Values[i]
-			}
-			similarSequences = append(similarSequences, tmp)
+			currentNode := compactPredictionTree.LookupTable.Table[element.(int)]
+			similarSequences = append(similarSequences, currentNode)
 		}
 
 		// similarSequences := make([]*sequence.Sequence, 0)
 
 		fmt.Println("number of similar seqs: ", len(similarSequences))
 		for _, seq := range similarSequences {
-			fmt.Println("\t", seq.ID)
+			fmt.Println("\t", sequence.String(seq))
 		}
 
-		consequents := make(map[int]*sequence.Sequence, 0)
+		consequents := make(map[int][]string, 0)
 		for _, similarSequence := range similarSequences {
 			consequent := sequence.ComputeConsequent(targetSequence, similarSequence)
-			if len(consequent.Values) > 0 {
-				consequents[similarSequence.ID] = sequence.ComputeConsequent(targetSequence, similarSequence)
-				fmt.Println("\t", similarSequence.ID, consequents[similarSequence.ID])
+			if len(consequent) > 0 {
+				consequents[similarSequence.ID] = consequent
+				// fmt.Println("\t", similarSequence.ID, consequents[similarSequence.ID])
 			}
 		}
 
-		//fmt.Println("consequents: ")
+		fmt.Println("consequents: ")
 		countables := make(map[string]float64, 0)
 		for _, consequent := range consequents {
 			//fmt.Println(consequent)
-			for _, elem := range consequent.Values {
-				score := 0.0
-				if score, ok := countables[elem]; !ok {
-					score = float64(1+float64(1/len(similarSequences))+float64(1/(len(countables)+1))) * 0.001
-				} else {
-					score = score * float64(1+(1/len(similarSequences))+(1/(len(countables)+1))) * 0.001
-				}
-				countables[elem] = score
-				//fmt.Println("\t", elem, score)
+			for _, elem := range consequent {
+				countables = computeScore(countables, elem, len(targetSequence.Values),len(targetSequence.Values),len(similarSequences), len(countables)+1)
+				fmt.Println("\t", elem, countables[elem])
 			}
 		}
 
 		fmt.Println("number of counttable keys: ", len(countables))
 		pairs := rankByScore(countables)
 		result := make([]string, 0)
-		for _, pair := range pairs {
-			result = append(result, pair.Key)
-			fmt.Println("\t", pair.Key, pair.Value)
+
+		if len(pairs) > 0 {
+			for i := 0; i < n && i < len(pairs); i++ {
+				result = append(result, pairs[i].Key)
+				fmt.Println("\t", pairs[i].Key, pairs[i].Value)
+			}
 		}
-		if n < len(result)-1 {
-			return result[:(n + 1)]
-		}
+		results = append(results, result)
+		fmt.Println("results until now:", results)
 	}
-	return result
+	return results
 
 }
+
+func computeScore(countables map[string]float64, key string, length int, target_size int, number_of_similar_sequences int, number_items_counttable int) map[string]float64 {
+
+	weight_level := float64(1 / number_of_similar_sequences)
+	weight_distance := float64(1 / number_items_counttable)
+	score := 1.0 + weight_level + weight_distance * 0.001
+
+	if oldScore, ok := countables[key]; !ok {
+		countables[key] = score
+	} else {
+		countables[key] = score * oldScore
+	}
+
+	return countables
+}
+
 
 func rankByScore(scores map[string]float64) PairList {
 	pl := make(PairList, len(scores))
@@ -151,6 +163,8 @@ func rankByScore(scores map[string]float64) PairList {
 		i++
 	}
 	sort.Sort(sort.Reverse(pl))
+	fmt.Println("scores: ", scores)
+	fmt.Println("pl: ", pl)
 	return pl
 }
 

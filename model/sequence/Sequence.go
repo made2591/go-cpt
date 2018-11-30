@@ -52,45 +52,31 @@ func FillSequence(sequence *Sequence, values []string) *Sequence {
 func UniqueElements(sequence *Sequence) []string {
 	result := make([]string, 0)
 	for _, c := range sequence.Values {
-		if !StringInSlice(c, result) {
+		if found, _ := StringInSlice(c, result); !found {
 			result = append(result, c)
 		}
 	}
 	return result
 }
 
-func StringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
+func StringInSlice(a string, list []string) (bool, int) {
+	for i := len(list)-1; i >= 0; i-- {
+		if strings.EqualFold(a, list[i]) {
+			return true, i
 		}
 	}
-	return false
+	return false, -1
 }
 
-func ComputeConsequent(seq1 *Sequence, seq2 *Sequence) *Sequence {
-	result := &Sequence{Values: make([]string, 0)}
-	goAhead := false
-	for i := len(seq2.Values) - 1; i >= 0; i-- {
-		if strings.Compare(seq2.Values[i], seq1.Values[len(seq1.Values)-1]) == 0 {
-			goAhead = true
-			break
-		}
-	}
-	if goAhead {
-		for i := len(seq2.Values) - 1; i >= 0; i-- {
-			if strings.Compare(seq2.Values[i], seq1.Values[len(seq1.Values)-1]) == 0 {
-				return result
-			} else {
-				if !StringInSlice(seq2.Values[i], result.Values) {
-					result.Values = append(result.Values, seq2.Values[i])
-				}
+func ComputeConsequent(seq1 *Sequence, seq2 *Sequence) []string {
+	result := make([]string, 0)
+	if found, index := StringInSlice(seq1.Values[len(seq1.Values)-1], seq2.Values); found {
+		for i := index; i < len(seq2.Values); i++ {
+			if found, _ := StringInSlice(seq2.Values[i], seq1.Values); !found {
+				result = append(result, seq2.Values[i])
 			}
 		}
 	}
-	// fmt.Println("seq1:", String(seq1))
-	// fmt.Println("seq2:", String(seq2))
-	// fmt.Println("result:", String(result))
 	return result
 }
 

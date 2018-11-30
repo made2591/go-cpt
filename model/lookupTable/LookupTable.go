@@ -11,14 +11,14 @@ type LookupTable struct {
 
 	keys []int
 	values []*predictionTree.PredictionTree
-	Table map[int]*predictionTree.PredictionTree
+	Table map[int]*sequence.Sequence
 
 }
 
 func NewLookupTable(sequences []*sequence.Sequence) (lookupTable *LookupTable) {
 	lookupTable = &LookupTable{}
 	lookupTable.keys = make([]int, 0)
-	lookupTable.Table = make(map[int]*predictionTree.PredictionTree)
+	lookupTable.Table = make(map[int]*sequence.Sequence)
 	for _, seq := range sequences {
 		lookupTable.keys = append(lookupTable.keys, seq.ID)
 		lookupTable.Table[seq.ID] = nil
@@ -28,7 +28,7 @@ func NewLookupTable(sequences []*sequence.Sequence) (lookupTable *LookupTable) {
 
 func String(lookupTable *LookupTable) (result string) {
 	for _, key := range lookupTable.keys {
-		result = strings.Join([]string{result, "\n", fmt.Sprintf("%d", key), " -> ", lookupTable.Table[key].Item, "\n"}, "")
+		result = strings.Join([]string{fmt.Sprintf("%d", key), " -> ", sequence.String(lookupTable.Table[key]), "\n"}, "")
 	}
 	return result
 }
