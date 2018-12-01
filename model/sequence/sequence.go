@@ -1,102 +1,102 @@
 package sequence
 
 import (
-	"bufio"
-	"encoding/csv"
-	"fmt"
 	"io"
-	"log"
 	"os"
+	"fmt"
+	"log"
+	"bufio"
 	"strings"
+	"encoding/csv"
 )
 
+// The struct Sequence
 type Sequence struct {
+
 	ID     int
 	Values []string
+
 }
 
-func AddIfNotExists(seqs []*Sequence, seq *Sequence) (bool, int) {
-	for _, s := range seqs {
-		if EqualSequence(s, seq) {
-			return false, -1
-		}
-	}
-	seqs = append(seqs, seq)
-	return true, len(seqs)
+// NewSequence creates a new Sequence
+func NewSequence(id int, values []string) (sequence *Sequence) {
+
+	// sequence
+	sequence.ID = id
+	sequence.Values = values
+
+	return sequence
+
 }
 
-func EqualSequence(seq1 *Sequence, seq2 *Sequence) bool {
-	if seq1 == nil && seq2 != nil {
+// SameSequence creates a new Sequence
+func SameSequence(seq1 *Sequence, seq2 *Sequence) bool {
+
+	// if one or both of the sequence are nil return false
+	if seq1 == nil || seq2 == nil {
 		return false
 	}
-	if seq1 != nil && seq2 == nil {
-		return false
-	}
+
+	// check the ID
 	if seq1.ID == seq2.ID {
 		return true
 	}
+
 	return false
+
 }
 
-func NewSequence(id int, values []string) (sequence *Sequence) {
-	sequence.ID = id
-	sequence.Values = values
-	return sequence
-}
+// LatestStringInSlice creates a new Sequence
+func LatestStringInSlice(symbol string, list []string) (bool, int) {
 
-func FillSequence(sequence *Sequence, values []string) *Sequence {
-	sequence.Values = values
-	return sequence
-}
-
-func UniqueElements(sequence *Sequence) []string {
-	result := make([]string, 0)
-	for _, c := range sequence.Values {
-		if found, _ := StringInSlice(c, result); !found {
-			result = append(result, c)
-		}
-	}
-	return result
-}
-
-func StringInSlice(a string, list []string) (bool, int) {
+	// if starting from the end the symbol is found
 	for i := len(list)-1; i >= 0; i-- {
-		if strings.EqualFold(a, list[i]) {
+
+		if strings.EqualFold(symbol, list[i]) {
 			return true, i
 		}
+
 	}
+
 	return false, -1
+
 }
 
+// ComputeConsequent creates a new Sequence
 func ComputeConsequent(seq1 *Sequence, seq2 *Sequence) []string {
+
+	// create result
 	result := make([]string, 0)
-	if found, index := StringInSlice(seq1.Values[len(seq1.Values)-1], seq2.Values); found {
+
+	// if seq2 is similar to seq1 (contains is last character)
+	if found, index := LatestStringInSlice(seq1.Values[len(seq1.Values)-1], seq2.Values); found {
+
+		// for every values from there to end
 		for i := index; i < len(seq2.Values); i++ {
-			if found, _ := StringInSlice(seq2.Values[i], seq1.Values); !found {
+
+			// keep value not found in original seq1
+			if found, _ := LatestStringInSlice(seq2.Values[i], seq1.Values); !found {
 				result = append(result, seq2.Values[i])
 			}
+
 		}
+
 	}
+
 	return result
+
 }
 
-func LastNSymbols(sequence *Sequence, n int) []string {
-	if sequence == nil {
-		return make([]string, 0)
-	}
-	result := make([]string, 0)
-	for i, c := range sequence.Values {
-		if i >= (len(sequence.Values) - n) {
-			result = append(result, c)
-		}
-	}
-	return result
-}
-
+// String provides a string of Sequence
 func String(sequence *Sequence) string {
-	return strings.Join([]string{"ID: ", fmt.Sprintf("%d", sequence.ID), " Values [", fmt.Sprintf("%v", sequence.Values), "]"}, "")
+
+	return strings.Join([]string{"ID: ",
+			fmt.Sprintf("%d", sequence.ID), " Values [",
+			fmt.Sprintf("%v", sequence.Values), "]"}, "")
+
 }
 
+// ReadCSVSequencesFile provides a map of Sequences given a lower and upper limit
 func ReadCSVSequencesFile(filepath string, limits ...int) (map[int]*Sequence) {
 
 	result := map[int]*Sequence{}
@@ -113,22 +113,23 @@ func ReadCSVSequencesFile(filepath string, limits ...int) (map[int]*Sequence) {
 		if err == io.EOF {
 			break
 		}
-		if len(limits) > 0 {
-			if row > limits[0] {
-				result[id] = &Sequence{ID: id, Values: record}
-				id += 1
-			}
-		} else {
-			result[id] = &Sequence{ID: id, Values: record}
-			id += 1
-		}
 		if len(limits) > 1 {
-			if row > limits[1] {
+			if row >= limits[1] {
 				break
 			}
 		}
+		if len(limits) > 0 {
+			if row >= limits[0] {
+				result[id] = NewSequence(id, record)
+				id += 1
+			}
+		} else {
+			result[id] = NewSequence(id, record)
+			id += 1
+		}
 		row += 1
 	}
+
 	return result
 
 }

@@ -1,19 +1,21 @@
 package main
 
 import (
+
 	"fmt"
 
-	"github.com/made2591/go-cpt/model/compactPredictionTree"
-	"github.com/made2591/go-cpt/model/invertedIndexTable"
-	"github.com/made2591/go-cpt/model/predictionTree"
 	"github.com/made2591/go-cpt/model/sequence"
+	"github.com/made2591/go-cpt/model/predictionTree"
+	"github.com/made2591/go-cpt/model/invertedIndexTable"
+	"github.com/made2591/go-cpt/model/compactPredictionTree"
+
 )
 
 func main() {
 	trainingSequences := sequence.ReadCSVSequencesFile("./data/dummy.csv")
 	testingSequences := sequence.ReadCSVSequencesFile("./data/dumbo.csv")
-	trainingSequences = sequence.ReadCSVSequencesFile("./data/train.csv", 0, 10)
-	testingSequences = sequence.ReadCSVSequencesFile("./data/test.csv", 0, 10)
+	trainingSequences = sequence.ReadCSVSequencesFile("./data/train.csv", 1, 11)
+	testingSequences = sequence.ReadCSVSequencesFile("./data/test.csv", 1, 11)
 	for _, seq := range trainingSequences {
 		fmt.Println(sequence.String(seq))
 	}

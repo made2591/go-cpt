@@ -8,9 +8,11 @@ import (
 
 // The struct InvertedIndexTable
 type InvertedIndexTable struct {
+
 	keys   []string
 	values []*sequence.Sequence
 	Table  map[string][]*sequence.Sequence
+
 }
 
 // NewInvertedIndexTable creates a new InvertedIndexTable
@@ -50,7 +52,7 @@ func AddSequenceIfMissing(invertedIndexTable *InvertedIndexTable, key string, se
 
 	// add sequence to table
 	for _, cseq := range invertedIndexTable.Table[key] {
-		if sequence.EqualSequence(seq, cseq) {
+		if sequence.SameSequence(seq, cseq) {
 			return false, nil
 		}
 	}

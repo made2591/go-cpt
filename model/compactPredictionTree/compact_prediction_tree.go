@@ -5,12 +5,13 @@ package compactPredictionTree
 import (
 
 	"os"
+	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/made2591/go-cpt/model/invertedIndexTable"
-	"github.com/made2591/go-cpt/model/predictionTree"
 	"github.com/made2591/go-cpt/model/sequence"
+	"github.com/made2591/go-cpt/model/predictionTree"
+	"github.com/made2591/go-cpt/model/invertedIndexTable"
 
 	"github.com/op/go-logging"
 	set "github.com/deckarep/golang-set"
@@ -23,43 +24,26 @@ var format = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
-type Secret string
-
-func (p Secret) Redacted() interface{} {
-	return logging.Redact(string(p))
-}
-
 func init() {
-	// For demo purposes, create two backend for os.Stderr.
+
 	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
 	backend2 := logging.NewLogBackend(os.Stderr, "", 0)
 
-	// For messages written to backend2 we want to add some additional
-	// information to the output, including the used log level and the name of
-	// the function.
 	backend2Formatter := logging.NewBackendFormatter(backend2, format)
-
-	// Only errors and more severe messages should be sent to backend1
 	backend1Leveled := logging.AddModuleLevel(backend1)
-	backend1Leveled.SetLevel(logging.DEBUG, "")
-
-	// Set the backends to be used.
+	backend1Leveled.SetLevel(logging.INFO, "")
 	logging.SetBackend(backend1Leveled, backend2Formatter)
 
-	//log.Debugf("debug %s", Secret("secret"))
-	//log.Info("info")
-	//log.Notice("notice")
-	//log.Warning("warning")
-	//log.Error("err")
-	//log.Critical("crit")
 }
 
 // The struct CompactPredictionTree
 type CompactPredictionTree struct {
+
 	InvertedIndexTable *invertedIndexTable.InvertedIndexTable
 	PredictionTree     *predictionTree.PredictionTree
 	TrainingSet        map[int]*sequence.Sequence
 	TestingSet         map[int]*sequence.Sequence
+
 }
 
 // NewCompactPredictionTree create a new CompactPredictionTree
@@ -89,6 +73,8 @@ func NewCompactPredictionTree(
 
 // InitCompactPredictionTree init structure
 func InitCompactPredictionTree(compactPredictionTree *CompactPredictionTree) {
+
+	log.Infof("InitCompactPredictionTree: %s", String(compactPredictionTree))
 
 	// save the cursore node to create the compact prediction tree
 	cursorNode := compactPredictionTree.PredictionTree
@@ -167,19 +153,19 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 			// if the symbol appears in some sequence
 			if len(compactPredictionTree.InvertedIndexTable.Table[symbol]) != 0 {
 
-				log.Debugf("\tsymbol: %s, seqIDs: ", symbol)
-
 				// create a new set of IDs of sequence in which the symbol appears
 				seqID := set.NewSet()
+				debugSeqID := ""
 				for _, seq := range compactPredictionTree.InvertedIndexTable.Table[symbol] {
 					seqID.Add(seq.ID)
-					log.Debugf("%d ", seq.ID)
+					debugSeqID += fmt.Sprintf("%d ", seq.ID)
 				}
-				log.Debugf("\t\tintersection set before intersection: %s", intersection.String())
+				log.Debugf("\tsymbol: %s, seqIDs: %s", symbol, debugSeqID)
+				log.Debugf("\t  intersection set before intersection: %s", intersection.String())
 
 				// intersect the set
 				intersection = intersection.Intersect(seqID)
-				log.Debugf("\t\tintersection set after intersection: %s", intersection.String())
+				log.Debugf("\t  intersection set after intersection: %s", intersection.String())
 
 			}
 
@@ -194,15 +180,14 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 		// init the slice with the right dimension
 		similarSequences = make([]*sequence.Sequence, len(it.C))
 
+		// fullfill the set of sequences
+		for seqID := range it.C {
+			similarSequences = append(similarSequences, compactPredictionTree.TrainingSet[seqID.(int)])
+		}
+
 		log.Infof("number of similar sequences: %d", len(similarSequences))
 		for _, seq := range similarSequences {
 			log.Debugf("\t%v", sequence.String(seq))
-		}
-
-		// fullfill the set of sequences
-		for seqID := range it.C {
-			log.Debugf("\telement: %d", seqID.(int))
-			similarSequences = append(similarSequences, compactPredictionTree.TrainingSet[seqID.(int)])
 		}
 
 		// init map of consequent
@@ -211,7 +196,7 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 		// for each similar sequence
 		for _, similarSequence := range similarSequences {
 
-			log.Debugf("\tsequence: %d", similarSequence.ID)
+			log.Debugf("\t  sequence ID: %d", similarSequence.ID)
 
 			// compute the consequent, i.e. the longest subsequence of symbols
 			// after the latest occurence of the latest symbol of tested sequence
@@ -222,7 +207,7 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 
 				// saved it for later
 				consequents[similarSequence.ID] = consequent
-				log.Debugf("\tconsequent: %v", consequent)
+				log.Debugf("\t    consequent: %v", consequent)
 
 			}
 
@@ -250,7 +235,7 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 
 		// return predictions if any
 		if len(pairs) > 0 {
-			for i := 0; i < n-1 && i < len(pairs); i++ {
+			for i := 0; i < n && i < len(pairs); i++ {
 				result = append(result, pairs[i].Key)
 				log.Debugf("\tsymbol: %s, %f", pairs[i].Key, pairs[i].Value)
 			}
@@ -258,6 +243,7 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 
 		// add sequence to results
 		results[seqIndex] = result
+		log.Debugf("results until now: %v", results)
 
 	}
 
@@ -267,7 +253,7 @@ func PredictionOverTestingSequence(compactPredictionTree *CompactPredictionTree,
 }
 
 // Stringify the compactPredictionTree
-func String(compactPredictionTree CompactPredictionTree) (result string) {
+func String(compactPredictionTree *CompactPredictionTree) (result string) {
 
 	ii := invertedIndexTable.String(compactPredictionTree.InvertedIndexTable)
 	pt := predictionTree.String(compactPredictionTree.PredictionTree)
@@ -298,8 +284,8 @@ func computeScore(scores map[string]float64,
 	}
 
 	return scores
-}
 
+}
 
 type Pair struct {
 	Key   string
