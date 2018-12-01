@@ -21,11 +21,7 @@ type Sequence struct {
 // NewSequence creates a new Sequence
 func NewSequence(id int, values []string) (sequence *Sequence) {
 
-	// sequence
-	sequence.ID = id
-	sequence.Values = values
-
-	return sequence
+	return &Sequence{ID: id, Values: values}
 
 }
 
