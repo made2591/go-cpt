@@ -97,21 +97,37 @@ func String(sequence *Sequence) string {
 	return strings.Join([]string{"ID: ", fmt.Sprintf("%d", sequence.ID), " Values [", fmt.Sprintf("%v", sequence.Values), "]"}, "")
 }
 
-func ReadCSVSequencesFile(filepath string) (result []*Sequence) {
+func ReadCSVSequencesFile(filepath string, limits ...int) (map[int]*Sequence) {
+
+	result := map[int]*Sequence{}
 
 	f, e := os.Open(filepath)
 	if e != nil {
 		log.Fatal("error: trainFile")
 	}
 	r := csv.NewReader(bufio.NewReader(f))
-	count := -1
+	row := 0
+	id := 0
 	for {
 		record, err := r.Read()
 		if err == io.EOF {
 			break
 		}
-		result = append(result, &Sequence{ID: count, Values: record})
-		count += 1
+		if len(limits) > 0 {
+			if row > limits[0] {
+				result[id] = &Sequence{ID: id, Values: record}
+				id += 1
+			}
+		} else {
+			result[id] = &Sequence{ID: id, Values: record}
+			id += 1
+		}
+		if len(limits) > 1 {
+			if row > limits[1] {
+				break
+			}
+		}
+		row += 1
 	}
 	return result
 
