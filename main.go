@@ -15,10 +15,16 @@ import (
 	"github.com/made2591/go-cpt/model/compactPredictionTree"
 
 	"strings"
+	"encoding/json"
 )
 
 const maxUploadSize = 20 * 1024 * 1024 // 2 mb
 const uploadPath = "./uploads"
+
+type Prediction struct {
+	Sequence    []string
+	Prediction  []string
+}
 
 func local() {
 	trainingSequences := sequence.ReadCSVSequencesFile("./data/dummy.csv")
@@ -46,6 +52,7 @@ func local() {
 
 func initcpt() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		trainingSequences := sequence.ReadCSVSequencesFile(strings.Join([]string{"./", uploadPath, "/train.csv"}, ""), 1, 11)
 		testingSequences := sequence.ReadCSVSequencesFile(strings.Join([]string{"./", uploadPath, "/test.csv"}, ""), 1, 11)
 		invertedIndex := invertedIndexTable.NewInvertedIndexTable(trainingSequences)
@@ -55,11 +62,24 @@ func initcpt() http.HandlerFunc {
 		fmt.Println(predictionTree.String(cpt.PredictionTree))
 
 		predictions := compactPredictionTree.PredictionOverTestingSequence(cpt, 5, 3)
+		jsonPredictions := []*Prediction{}
 		for i := 0; i < len(testingSequences); i++ {
+			jsonPredictions = append(jsonPredictions, &Prediction{Sequence: testingSequences[i].Values, Prediction: predictions[i]})
 			fmt.Println(testingSequences[i].Values)
 			fmt.Println(predictions[i])
 		}
+
+		js, err := json.Marshal(jsonPredictions)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+
 	})
+
 }
 
 func uploadTrain() http.HandlerFunc {
