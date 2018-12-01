@@ -1,6 +1,6 @@
 # go-cpt
 
-A Go implementation of Compact Prediction Tree. A blog post related is [available](http://made2591.github.io/blog/compact-prediction-tree)
+A Go implementation of Compact Prediction Tree. A blog post related is [available](https://made2591.github.io/posts/compact-prediction-tree).
 
 ## Instructions
 
