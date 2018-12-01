@@ -27,6 +27,8 @@ unik instances
 ```
 You can see IP assigned to instances in the last column of the output
 
+![](./unik.png)
+
 To see the logs of the running instances run:
 ```
 unik logs --instance go-cpt-instance
@@ -38,6 +40,9 @@ A sample file are already uploaded into the upload folder: you can modify the ``
 ```
 curl http://<YOUR_RUNNING_INSTANCES>:8080/initcpt
 ```
+
+You should see predictions for the first 10 sequences :-)
+![](./predictions.png)
 
 ## Author
 
